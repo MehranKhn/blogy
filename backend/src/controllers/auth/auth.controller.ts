@@ -1,10 +1,12 @@
 import { Context } from "hono";
-import { signupSchema } from "./auth.schema";
-import z from "zod";
+import { signinSchema, signupSchema } from "./auth.schema";
+import z, { email, success } from "zod";
 import { getPrisma } from "../../config/prismaClient";
 import { Prisma } from "../../generated/prisma/client";
-import { verify,sign } from "hono/jwt";
+import { sign } from "hono/jwt";
 import { setCookie } from "hono/cookie";
+import bcrypt from "bcryptjs";
+
 
 export const signup = async (c: Context) => {
   const body = await c.req.json();
@@ -15,6 +17,8 @@ export const signup = async (c: Context) => {
     return c.json(
       {
         success: false,
+        message:"Invalid inputs",
+        data:null,
         error: z.treeifyError(parsed.error),
       },
       400
@@ -23,17 +27,25 @@ export const signup = async (c: Context) => {
 
   try {
     const prisma = getPrisma(c);
+    const hashedPassword=await bcrypt.hash(parsed.data.password,10);
 
     const user = await prisma.user.create({
       data: {
         name: parsed.data.name,
         email: parsed.data.email,
-        password: parsed.data.password
+        password: hashedPassword
       },
+      select:{
+        name:true,
+        email:true,
+        id:true
+      }
     });
+
     const token=await sign({
         userId:user.id,
-        name:user.name
+        name:user.name,
+        exp:Math.floor(Date.now()/1000)+ 60*60
     },c.env.JWT_SECRET,"HS256");
     
     setCookie(c,"token",token,{
@@ -47,9 +59,12 @@ export const signup = async (c: Context) => {
       {
         success: true,
         message: "User created successfully",
+        data:user,
+        err:null
       },
       201
     );
+
   } catch (err) {
     if (
       err instanceof Prisma.PrismaClientKnownRequestError &&
@@ -59,6 +74,8 @@ export const signup = async (c: Context) => {
         {
           success: false,
           message: "User already exists",
+          data:null,
+          error:null
         },
         400
       );
@@ -76,10 +93,85 @@ export const signup = async (c: Context) => {
   }
 };
 
-export const signIn=(c:Context)=>{
-   return c.json({
-    message:"heloo"
-   },200)
+export const signIn=async (c:Context)=>{
+   const body=await c.req.json();
+   const parsed=signinSchema.safeParse(body);
+
+   if(!parsed.success){
+       return c.json(
+        {
+            success: false,
+            message:"Invalid inputs",
+            data:null,
+            error: z.treeifyError(parsed.error),
+        },
+        400
+        );
+   }
+
+   try{
+     const prisma=getPrisma(c);
+
+     const user=await prisma.user.findUnique({
+        where:{
+            email:parsed.data.email
+        }
+     })
+
+     if(!user){
+        return c.json({
+            success:false,
+            message:"User doesn't exist, please signup",
+            data:null,
+            error:null
+        },400)
+     }
+     const isPassword=await bcrypt.compare(parsed.data.password,user.password);
+
+     if(!isPassword){
+         return c.json({
+            success:false,
+            message:"Invalid Credentials",
+            data:null,
+            error:null
+        },400)
+     }
+
+     const token=await sign({
+        userId:user.id,
+        name:user.name,
+        exp:Math.floor(Date.now()/1000)+ 60*60
+    },c.env.JWT_SECRET,"HS256");
+    
+    setCookie(c,"token",token,{
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+        maxAge: 60 * 60,
+    });
+     
+     return c.json({
+        success:true,
+        message:"successfully signed In",
+        data:{
+            name:user.name,
+            email:user.email,
+            id:user.id,
+            bio:user?.bio
+        },
+        error:null
+     })
+   }
+   catch(err){
+    console.log(err);
+    return c.json({
+        success:false,
+        message:"Internal Server Error",
+        data:null,
+        err
+     })
+   }
+
 }
 
 export const me=(c:Context)=>{

@@ -15,4 +15,12 @@ export const signupSchema = z.object({
     
 });
 
-export type SignupType=z.infer<typeof signupSchema>
+export const signinSchema=z.object({
+  email:z.email("Invalid Email"),
+  password:z
+    .string()
+    .min(6, "Password too short")
+    .max(30, "Password too long"),
+})   
+export type SigninSchema=z.infer<typeof signinSchema>;
+export type SignupType=z.infer<typeof signupSchema>;
