@@ -3,6 +3,8 @@ import { signupSchema } from "./auth.schema";
 import z from "zod";
 import { getPrisma } from "../../config/prismaClient";
 import { Prisma } from "../../generated/prisma/client";
+import { verify,sign } from "hono/jwt";
+import { setCookie } from "hono/cookie";
 
 export const signup = async (c: Context) => {
   const body = await c.req.json();
@@ -24,13 +26,23 @@ export const signup = async (c: Context) => {
 
     const user = await prisma.user.create({
       data: {
-        name: body.name,
-        email: body.email,
-        password: body.password,
-        bio: body.bio,
+        name: parsed.data.name,
+        email: parsed.data.email,
+        password: parsed.data.password
       },
     });
-
+    const token=await sign({
+        userId:user.id,
+        name:user.name
+    },c.env.JWT_SECRET,"HS256");
+    
+    setCookie(c,"token",token,{
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+        maxAge: 60 * 60 * 24 * 7,
+    });
+     
     return c.json(
       {
         success: true,

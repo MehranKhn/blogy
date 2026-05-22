@@ -12,8 +12,6 @@ export const signupSchema = z.object({
     .string()
     .min(6, "Password too short")
     .max(30, "Password too long"),
-
-  bio:z.string().max(100,"Bio too long"),
     
 });
 

@@ -7,3 +7,4 @@ app.route("/api/v1",authRouter)
 app.route("/api/v1",blogRouter)
 
 
+export default app;
