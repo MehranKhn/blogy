@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { signinSchema, signupSchema } from "./auth.schema";
-import z, { email, success } from "zod";
+import z from "zod";
 import { getPrisma } from "../../config/prismaClient";
 import { Prisma } from "../../generated/prisma/client";
 import { sign } from "hono/jwt";
@@ -168,7 +168,7 @@ export const signIn=async (c:Context)=>{
         success:false,
         message:"Internal Server Error",
         data:null,
-        err
+        error:err
      })
    }
 
@@ -195,7 +195,7 @@ export const me= async(c:Context)=>{
         success:false,
         message:"User doesn't exist",
         data:null,
-        err:null
+        error:null
       })
     }
 
