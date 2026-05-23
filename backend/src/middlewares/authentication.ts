@@ -4,7 +4,6 @@ import { getCookie } from "hono/cookie";
 
 export const authenticationMiddleware=async (c:Context,next:Next)=>{
        const token=getCookie(c,"token");
-
        if(!token){
         return c.json({
             success:false,
@@ -23,6 +22,6 @@ export const authenticationMiddleware=async (c:Context,next:Next)=>{
             err:null
         })
        }
-    c.set("user",decodedToken)
-    next();
+    c.set("userId",decodedToken.id)
+    await next();
 }

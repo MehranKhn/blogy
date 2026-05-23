@@ -9,3 +9,7 @@ export const editBlog= (c:Context)=>{
 export const getBlog= (c:Context)=>{
    return c.text("getBlog")
 }
+
+export const getBlogsBulk=async(c:Context)=>{
+    return c.text("getBlogsBulk")
+}

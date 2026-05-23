@@ -52,7 +52,7 @@ export const signup = async (c: Context) => {
         httpOnly: true,
         secure: false,
         sameSite: "Lax",
-        maxAge: 60 * 60 * 24 * 7,
+        maxAge: 60 * 60,
     });
      
     return c.json(
@@ -174,8 +174,35 @@ export const signIn=async (c:Context)=>{
 
 }
 
-export const me=(c:Context)=>{
+export const me= async(c:Context)=>{
+    const prisma=getPrisma(c);
+    const userId=c.get("userId");
+
+    const user=await prisma.user.findFirst({
+        where:{
+            id:userId
+        },
+        select:{
+            name:true,
+            email:true,
+            bio:true,
+            id:true
+        }
+    });
+
+    if(!user){
+      return c.json({
+        success:false,
+        message:"User doesn't exist",
+        data:null,
+        err:null
+      })
+    }
+
     return c.json({
-    message:"heloo"
+      success:true,
+      message:"user authenticated",
+      data:user,
+      error:null
    },200)
 }
