@@ -1,5 +1,6 @@
 import { Context } from "hono"
 import { getPrisma } from "../../config/prismaClient"
+import getPaginationData from "../../utils/pagination";
 
 export const createBlog= async (c:Context)=>{
    const body=await c.req.json();
@@ -131,9 +132,17 @@ export const getBlog= async(c:Context)=>{
 }
 
 export const getBlogsBulk=async(c:Context)=>{
+   const body=await c.req.json();
+   const {skip,take}=getPaginationData(body.page)
     try{
       const prisma=getPrisma(c);
-       const blogs=await prisma.post.findMany();
+       const blogs=await prisma.post.findMany({
+          skip,
+          take,
+          orderBy:{
+            publishedAt:"desc"
+          }
+       });
        return c.json({
          success:true,
          message:"Successfully fetched blogs",
