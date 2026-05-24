@@ -71,7 +71,7 @@ export const editBlog= async (c:Context)=>{
       })
       return c.json({
          success:true,
-         message:"Successfully uploaded the blog",
+         message:"Successfully updated the blog",
          data:null,
          error:null
       },200);

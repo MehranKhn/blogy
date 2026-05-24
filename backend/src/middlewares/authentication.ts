@@ -13,7 +13,6 @@ export const authenticationMiddleware=async (c:Context,next:Next)=>{
         })
        }
        const decodedToken=await verify(token,c.env.JWT_SECRET,"HS256");
-
        if(!decodedToken){
            return c.json({
             success:false,
@@ -22,6 +21,6 @@ export const authenticationMiddleware=async (c:Context,next:Next)=>{
             err:null
         })
        }
-    c.set("userId",decodedToken.id)
+    c.set("userId",decodedToken.userId)
     await next();
 }
