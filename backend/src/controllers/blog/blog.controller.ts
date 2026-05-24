@@ -1,9 +1,25 @@
 import { Context } from "hono"
 import { getPrisma } from "../../config/prismaClient"
 import getPaginationData from "../../utils/pagination";
+import { createBlogSchema,editBlogSchema } from "@mjk_2002/common";
+import z from "zod"
 
 export const createBlog= async (c:Context)=>{
    const body=await c.req.json();
+   const parsed=createBlogSchema.safeParse(body);
+
+   if(!parsed.success){
+      return c.json(
+            {
+              success: false,
+              message:"Invalid inputs",
+              data:null,
+              error: z.treeifyError(parsed.error),
+            },
+            400
+          );
+   }
+
    try{
       const prisma=getPrisma(c);
       const userId=c.get("userId");
@@ -33,6 +49,20 @@ export const createBlog= async (c:Context)=>{
 
 export const editBlog= async (c:Context)=>{
    const body=await c.req.json();
+
+    const parsed=editBlogSchema.safeParse(body);
+
+   if(!parsed.success){
+      return c.json(
+            {
+              success: false,
+              message:"Invalid inputs",
+              data:null,
+              error: z.treeifyError(parsed.error),
+            },
+            400
+          );
+   }
 
     if (!body.id) {
       return c.json(
@@ -132,8 +162,8 @@ export const getBlog= async(c:Context)=>{
 }
 
 export const getBlogsBulk=async(c:Context)=>{
-   const body=await c.req.json();
-   const {skip,take}=getPaginationData(body.page)
+   const page=c.req.query("page") || "1";
+   const {skip,take}=getPaginationData(page)
     try{
       const prisma=getPrisma(c);
        const blogs=await prisma.post.findMany({

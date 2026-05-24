@@ -1,5 +1,5 @@
 import { Context } from "hono";
-import { signinSchema, signupSchema } from "./auth.schema";
+import { signinSchema, signupSchema } from "@mjk_2002/common";
 import z from "zod";
 import { getPrisma } from "../../config/prismaClient";
 import { Prisma } from "../../generated/prisma/client";
