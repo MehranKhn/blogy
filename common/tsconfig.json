@@ -66,5 +66,8 @@
     "skipLibCheck": true,                     /* Skip type checking of declaration files. */
     "forceConsistentCasingInFileNames": true ,
     "ignoreDeprecations": "6.0" /* Disallow inconsistently-cased references to the same file. */
-  }
+    
+  },
+  "include": ["src/**/*"],       // ← ONLY compile files inside src/
+  "exclude": ["node_modules", "dist"]  // ← IGNORE these folders
 }
