@@ -1,6 +1,6 @@
 import { Route } from "react-router";
-import Signup from "../pages/signup";
-import Signin from "../pages/signin";
+import Signup from "../pages/Signup";
+import Signin from "../pages/Signin";
 
 export const AuthRoutes = [
   <Route key="signin" path="/signin" element={<Signin/>}/>,
