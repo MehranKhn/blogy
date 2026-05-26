@@ -94,7 +94,7 @@ export const signup = async (c: Context) => {
 };
 
 export const signIn=async (c:Context)=>{
-   const body=await c.req.json();
+   const body=await c.req.json().catch(()=>null);
    const parsed=signinSchema.safeParse(body);
 
    if(!parsed.success){

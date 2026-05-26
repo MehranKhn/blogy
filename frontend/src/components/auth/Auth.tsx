@@ -1,6 +1,9 @@
 import { useState } from "react"
 import type { SignupType } from "@mjk_2002/common"
 import { Link } from "react-router"
+import axios from "axios"
+import { toast } from "sonner"
+import { useNavigate } from "react-router"
 
 export default function Auth({type}:{type:"signup"|"signin"}){
 
@@ -9,12 +12,15 @@ export default function Auth({type}:{type:"signup"|"signin"}){
         email:"",
         password:""
     })
-
+    const [loading,setLoading]=useState(false);
+    
     const [errors,setErrors]=useState<Record<string,string>>({
         name:"",
         email:"",
         password:""
     })
+    
+    const navigate=useNavigate();
 
     function handleInputChange(key:string,value:string){
        setInputs((prev)=>({
@@ -42,18 +48,32 @@ export default function Auth({type}:{type:"signup"|"signin"}){
     return Object.keys(newErrors).length === 0  // true = valid
   }
     
-    function submitInput(e: React.FormEvent) {
+async function submitInput(e: React.SubmitEvent) {
     e.preventDefault()
     if (!validate()) return
-    console.log("submit", inputs)
-    // call your API here
+   
+    try{
+        setLoading(true);
+        const res=await axios.post(`${import.meta.env.VITE_BACKEND_DEV_URL}/auth/${type==="signin"?"signin":"signup"}`,inputs);
+        console.log(res)        
+        toast.success(res.data.message);
+        navigate("/blog");
+    }
+     catch(e){
+        console.log(e);
+        toast.error(e as string)
+     }
+     finally{
+        setLoading(false)
+     }
+     
   }
 
     return <div className="flex flex-1 justify-center items-center min-h-screen">
         <div className="w-full max-w-sm md:max-w-md space-y-2">
 
-            <h1 className="text-4xl md:text-5xl font-bold text-center mb-3">{type==="signin"?"Log in to your account":"Create an Account"}</h1>
-            <div className="flex justify-center gap-1">
+            <h1 className="text-4xl font-bold text-center mb-3">{type==="signin"?"Log in to your account":"Create an Account"}</h1>
+            <div className="mb-4 flex justify-center gap-1">
                 <span className="text-md text-center">{type==="signin"?"Don't have an account":"Already have an account?"}</span>
                 <Link
                 to={type === "signin" ? "/signup" : "/signin"}
@@ -79,7 +99,7 @@ export default function Auth({type}:{type:"signup"|"signin"}){
                     <input type="text" placeholder="Enter your password" id="password" className="px-2 py-2 outline-none border border-gray-200 w-full mt-2 rounded-md" onChange={(e)=>handleInputChange("password",e.target.value)}/>
                     {errors.password && <p className="text-red-600">{errors.password}</p>}
                 </div>
-                <button className="p-2 w-full bg-black text-white font-medium rounded-md mt-2">{type==="signin"?"Sign in":"Sign up"}</button>
+                <button disabled={loading} className="p-2 w-full bg-black text-white font-medium rounded-md mt-2">{type==="signin"?"Sign in":"Sign up"}</button>
             </form>
         </div>
     </div>
